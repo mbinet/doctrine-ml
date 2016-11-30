@@ -12,24 +12,21 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <style>
-        [v-cloak] {
-            display: none;
-        }
-        ul.tools {
-            list-style: none;
+        div.tools {
             box-shadow: 0px 0px 4px rgba(0,0,0,.5);
             border: solid 1px #000;
             position: absolute;
             background: #fff;
+            padding: 10px;
         }
-        ul.tools li {
-            /*display: inline-block;*/
-            width: 10px;
-            height: 20px;
-            border: solid 1px #000;
-            /*margin: 5px;*/
-            /*padding: 5px 10px;*/
-            cursor: pointer;
+        .avocat {
+            color: red;
+        }
+        .partie {
+            color: blue;
+        }
+        .loi {
+            color: green;
         }
         .fade-enter-active, .fade-leave-active {
             transition: opacity .5s
@@ -41,41 +38,34 @@
 </head>
 <body>
     <div id="app" class="container">
-        <h1>{{ cleanUrl }}</h1>
 
+        <br />
+        <i>To choose infos, just select the text.</i>
+        <br /><br /><br />
         <div @click.capture="doThis">
-            amis ahah ahah ahah ahah ahah ahah Bonjour les amis j'rigole ahah<br/>lolo
-            amis ahah ahah ahah ahah ahah ahah Bonjour les amis j'rigole ahah<br/>lolo
-            amis ahah ahah ahah ahah ahah ahah Bonjour les amis j'rigole ahah<br/>lolo
-            amis ahah ahah ahah ahah ahah ahah Bonjour les amis j'rigole ahah<br/>lolo
-            amis ahah ahah ahah ahah ahah ahah Bonjour les amis j'rigole ahah<br/>lolo
-            amis ahah ahah ahah ahah ahah ahah Bonjour les amis j'rigole ahah<br/>lolo
-            amis ahah ahah ahah ahah ahah ahah Bonjour les amis j'rigole ahah<br/>lolo
+            LA COUR DE CASSATION, PREMIÈRE CHAMBRE CIVILE, a rendu l’arrêt suivant : Attendu, selon le jugement attaqué, que M. Z…, précédemment propriétaire d’un cheval de course, a formé opposition à l’ordonnance lui faisant injonction de payer à la Société du docteur X… (la société) divers frais vétérinaires engagés à la demande de M. Y…, entraîneur ; Sur le moyen unique, pris en sa première branche : Attendu que M. Z… fait grief au jugement de le condamner à payer à la société les sommes de 1 967, 45 euros, assortie des intérêts au taux légal à compter du 2 février 2012, et de 4, 72 euros au titre de la mise en demeure, ainsi que les frais de signification de l’ordonnance et la somme de 1 000 euros en application de l’article 700 du code de procédure civile alors, selon le moyen, que la juridiction de proximité ne pouvait statuer au fond après avoir déclaré recevable l’opposition à injonction de payer qu’après avoir mis à néant ladite ordonnance ; qu’en s’en abstenant, la juridiction de proximité a méconnu l’article 1420 du code civil ; Mais attendu que la juridiction de proximité a fait une exacte application de l’article 1420 du code de procédure civile en déclarant l’opposition recevable et en examinant le bien-fondé de la demande, dès lors que l’opposition suffit à mettre à néant l’ordonnance portant injonction de payer ; que le moyen n’est pas fondé ; Mais sur le moyen, pris en sa seconde branche : Vu l’article 455 du code de procédure civile ;
+
+            Lire en ligne : https://www.doctrine.fr/d/CASS/2016/JURITEXT000032532582
 
 
         </div>
 
         <transition name="fade">
-            <ul v-if="show" class="tools" v-bind:style="{ left: lValue + 'px', top: tValue + 'px', color: '' }">
-                <input type="radio" name="Mdr" value="LOL"/> Avocat<br />
-                <input type="radio" name="Mdr" value="LOL"/> Partie<br />
-                <input type="radio" name="Mdr" value="LOL"/> Loi
-            </ul>
+            <div v-if="show" class="tools" v-bind:style="{ left: lValue + 'px', top: tValue + 'px', color: '' }">
+                <input type="radio" name="Mdr" value="LOL" @click="select('avocat')"/>
+                    <span class="avocat">Avocat</span>
+                    <br />
+                <input type="radio" name="Mdr" value="LOL" @click="select('partie')"/>
+                    <span class="partie">Partie</span>
+                    <br />
+                <input type="radio" name="Mdr" value="LOL" @click="select('loi')"/>
+                    <span class="loi">Loi</span>
+            </div>
         </transition>
-        <!--<transition name="fade">-->
-            <!--<ul v-if="show" class="tools" v-bind:style="{ left: lValue, top: tValue}">-->
-        <select name="" id="">
-            <option value="">mdr</option>
-            <option value="">mdr</option>
-            <option value="">mdr</option>
-            <option value="">mdr</option>
-        </select>
-            <!--</ul>-->
-        <!--</transition>-->
 
-        <button @click="show = !show">
-            Toggle render
-        </button>
+
+        <br />
+        <a id="downloadAnchorElem" @click="exportFile">Export infos</a>
     </div>
 
 </body>
@@ -83,54 +73,65 @@
 
 <script src="https://unpkg.com/vue@2.0.7/dist/vue.js"></script>
 
-
-<script>
-    $(document).ready(function(){
-        $('[data-toggle="popover"]').popover();
-    });
-</script>
 <script>
 
     var app = new Vue({
         el: '#app',
         data: {
-            message: 'Hello Vue Word',
             show: false ,
-            tools: "",
-            cleanUrl: "",
             annot: [],
-            lValue: 10,
-            tValue: 10,
-            disValue: 'none'
+            lValue: 0,
+            tValue: 0,
+            selectedText: ""
         },
         methods: {
-            humanize: function() {
-                this.cleanUrl = this.url.replace(/^https?:\/\//, '').replace(/\/$/, '')
-            },
             doThis: function(event) {
-                var selectedText;
+
+                // positionning the popover next to the last pointer position
                 this.lValue = Number(event.clientX) + 5;
                 this.tValue = event.clientY;
-                console.log(this.tValue);
-                console.log(this.lValue);
-//                this.disValue = 'block';
-                var firstWd;
-                var nbWd;
-                selectedText = window.getSelection();
-                if (selectedText.toString() != "")
+
+                // displaying the popover only if there is text (simple click will hide it)
+                if (window.getSelection().toString() != "")
                     this.show = true;
                 else
                     this.show = false;
+            },
 
-                firstWd = this.firstWord(selectedText.toString());
-                nbWd = this.cptWords(selectedText.toString());
-//                console.log(firstWd);
-//                console.log(selectedText);
+            cptWords: function(str) {
+                var separators = [' ', '\\\+', '-', '\\\(', '\\\)', '\\*', '/'];
+                var tokens = str.split(new RegExp(separators.join('|'), 'g'));
+                return(tokens.length);
+            },
+            firstWord: function(str) {
+                var separators = [' ', '\\\+', '-', '\\\(', '\\\)', '\\*', '/'];
+                var tokens = str.split(new RegExp(separators.join('|'), 'g'));
+                return(tokens[0]);
+            },
+            select: function(param) {
+
+                // adding custom class to selected text
+                var span = document.createElement("span");
+                span.style.fontWeight = "bold";
+                span.className = param;
+                var sel = window.getSelection();
+                if (sel.rangeCount) {
+                    var range = sel.getRangeAt(0).cloneRange();
+                    range.surroundContents(span);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+
+                // getting infos from text
+                var selectedText = window.getSelection();
+                var firstWd = this.firstWord(selectedText.toString());
+                var nbWd = this.cptWords(selectedText.toString());
                 var text = selectedText.baseNode.data;
+                this.selectedText = text;
                 var cpt = 0;
                 var j = 0;
 
-                for (var i = 0, len = selectedText.anchorOffset ; i < len; i++) {
+                for (var i = 0, len = selectedText.extentOffset ; i < len; i++) {
                     if(text[i] == firstWd[j]) {
                         while(text[i+j] == firstWd[j])
                         {
@@ -141,27 +142,14 @@
                         j = 0;
                     }
                 }
-                this.annot.push({"mot": firstWd, "nocc": cpt, "longueur": nbWd});
-//                console.log(this.annot);
-
-//                console.log(selectedText.toString());
-//                console.log(selectedText.anchorNode);
+                this.annot.push({"mot": firstWd, "nocc": cpt, "longueur": nbWd, "type": param});
             },
-            cptWords: function(str) {
-//                var separators = [' ', '\\\+', '-', '\\\(', '\\\)', '\\*', '/', ':', '\\\?'];
-                var separators = [' ', '\\\+', '-', '\\\(', '\\\)', '\\*', '/'];
-                console.log(separators.join('|'));
-                var tokens = str.split(new RegExp(separators.join('|'), 'g'));
-                return(tokens.length);
-            },
-            firstWord: function(str) {
-//                var separators = [' ', '\\\+', '-', '\\\(', '\\\)', '\\*', '/', ':', '\\\?'];
-                var separators = [' ', '\\\+', '-', '\\\(', '\\\)', '\\*', '/'];
-                var tokens = str.split(new RegExp(separators.join('|'), 'g'));
-                return(tokens[0]);
-            },
-            colorify: function() {
-
+            exportFile: function() {
+                var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.annot));
+                var dlAnchorElem = document.getElementById('downloadAnchorElem');
+                dlAnchorElem.setAttribute("href",     dataStr     );
+                dlAnchorElem.setAttribute("download", "infos.json");
+                dlAnchorElem.click();
             }
         }
     })
